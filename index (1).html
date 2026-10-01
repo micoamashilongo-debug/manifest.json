@@ -1,0 +1,2936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MiccoInvoices Loan Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f4f6f8;
+    color: #222;
+    padding: 20px;
+}
+
+header {
+    background: #111827;
+    color: white;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+header h1 {
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+header p {
+    color: #d1d5db;
+}
+
+.company {
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.card h3 {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 10px;
+}
+
+.amount {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.stat {
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.stat-number {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.section-title {
+    margin-bottom: 12px;
+    font-size: 20px;
+}
+
+.actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+button {
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: bold;
+    background: #111827;
+    color: white;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.table-container {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th,
+td {
+    padding: 13px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+th {
+    background: #f9fafb;
+    font-size: 14px;
+}
+
+.status {
+    padding: 5px 9px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.active {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.due {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.overdue {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.paid {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.form-container {
+    display: none;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.form-container h2 {
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    font-size: 15px;
+}
+
+.form-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.save-btn {
+    background: #166534;
+}
+
+.cancel-btn {
+    background: #6b7280;
+}
+
+.delete-btn {
+    background: #b91c1c;
+    padding: 8px 12px;
+    font-size: 12px;
+}
+
+.whatsapp-btn {
+    background: #166534;
+    padding: 8px 12px;
+    font-size: 12px;
+}
+
+.total-preview,
+.balance-preview {
+    background: #f3f4f6;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.total-preview strong,
+.balance-preview strong {
+    font-size: 22px;
+}
+
+.customer-section,
+.loan-section,
+.payment-section,
+.reminder-section {
+    display: none;
+}
+
+.reminder-header {
+    background: #fff7ed;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.reminder-header strong {
+    font-size: 18px;
+}
+
+footer {
+    text-align: center;
+    color: #6b7280;
+    padding: 20px;
+    font-size: 13px;
+}
+
+@media (max-width: 800px) {
+
+    .summary-grid,
+    .stats,
+    .actions {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 500px) {
+
+    body {
+        padding: 10px;
+    }
+
+    .summary-grid,
+    .stats,
+    .actions {
+        grid-template-columns: 1fr;
+    }
+
+    header h1 {
+        font-size: 22px;
+    }
+
+    .form-buttons {
+        flex-direction: column;
+    }
+}
+
+
+</style>
+</head>
+<body>
+<div id="loginScreen" style="
+    max-width: 450px;
+    margin: 80px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.10);
+">
+
+    <h1 style="margin-bottom:10px;">
+        MICCOINVOICES
+    </h1>
+
+    <h2 style="margin-bottom:20px;">
+        Seller Login
+    </h2>
+
+    <div class="form-group">
+
+        <label>Email Address</label>
+
+        <input
+            type="email"
+            id="loginEmail"
+            placeholder="Enter your email"
+        >
+
+    </div>
+
+    <div class="form-group">
+
+        <label>Password</label>
+
+        <input
+            type="password"
+            id="loginPassword"
+            placeholder="Enter your password"
+        >
+
+    </div>
+
+    <button
+        onclick="loginSeller()"
+        style="width:100%;">
+
+        Login
+
+    </button>
+
+    <p
+        id="loginMessage"
+        style="
+            margin-top:15px;
+            color:#b91c1c;
+        ">
+    </p>
+</div>
+
+
+<div class="container" id="appContainer" style="display:none;">
+
+<header>
+
+<h1>MICCOINVOICES LOAN TRACKER</h1>
+
+<p>Welcome, Seller <button onclick="logoutSeller()" style="margin-left:15px;padding:8px 14px;background:#b91c1c;">Logout</button></p>
+
+</header>
+
+
+<div class="company">
+
+<h2>Your Company</h2>
+
+<p>Contact Information</p>
+
+</div>
+
+
+<!-- DASHBOARD -->
+
+<div class="summary-grid">
+
+<div class="card">
+
+<h3>TOTAL LENT</h3>
+
+<div class="amount" id="totalLent">
+N$ 0.00
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h3>TOTAL COLLECTED</h3>
+
+<div class="amount" id="totalCollected">
+N$ 0.00
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h3>OUTSTANDING</h3>
+
+<div class="amount" id="outstanding">
+N$ 0.00
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h3>OVERDUE</h3>
+
+<div class="amount" id="overdueAmount">
+N$ 0.00
+</div>
+
+</div>
+
+</div>
+
+
+<!-- STATISTICS -->
+
+<div class="stats">
+
+<div class="stat">
+
+<div class="stat-number" id="customerCount">
+0
+</div>
+
+<div class="stat-label">
+CUSTOMERS
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-number" id="activeLoans">
+0
+</div>
+
+<div class="stat-label">
+ACTIVE LOANS
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-number" id="dueSoon">
+0
+</div>
+
+<div class="stat-label">
+DUE SOON
+</div>
+
+</div>
+
+
+<div class="stat">
+
+<div class="stat-number" id="overdueLoans">
+0
+</div>
+
+<div class="stat-label">
+OVERDUE
+</div>
+
+</div>
+
+</div>
+
+
+<!-- QUICK ACTIONS -->
+
+<h2 class="section-title">
+QUICK ACTIONS
+</h2>
+
+<div class="actions">
+
+<button onclick="showCustomerForm()">
++ Add Customer
+</button>
+
+<button onclick="showLoanForm()">
++ Add Loan
+</button>
+
+<button onclick="showPaymentForm()">
+Record Payment
+</button>
+
+<button onclick="showReminders()">
+🔔 Reminders
+</button>
+
+</div>
+
+
+<!-- CUSTOMER FORM -->
+
+<div class="form-container" id="customerForm">
+
+<h2>Add Customer</h2>
+
+<div class="form-group">
+
+<label>Customer Full Name</label>
+
+<input
+type="text"
+id="customerName"
+placeholder="Enter full name"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label>Customer Contact</label>
+
+<input
+type="text"
+id="customerContact"
+placeholder="Phone number"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label>Customer Address</label>
+
+<textarea
+id="customerAddress"
+placeholder="Enter customer address">
+</textarea>
+
+</div>
+
+
+<div class="form-group">
+
+<label>Company Name (Optional)</label>
+
+<input
+type="text"
+id="customerCompany"
+placeholder="Company name"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label>Company Contact Information (Optional)</label>
+
+<input
+type="text"
+id="companyContact"
+placeholder="Company phone/email"
+>
+
+</div>
+
+
+<div class="form-buttons">
+
+<button
+class="save-btn"
+onclick="saveCustomer()">
+
+Save Customer
+
+</button>
+
+
+<button
+class="cancel-btn"
+onclick="hideCustomerForm()">
+
+Cancel
+
+</button>
+
+</div>
+
+</div>
+
+
+<!-- LOAN FORM -->
+
+<div class="form-container" id="loanForm">
+
+<h2>Add Loan</h2>
+
+<div class="form-group">
+
+<label>Customer</label>
+
+<select id="loanCustomer">
+
+<option value="">
+Select Customer
+</option>
+
+</select>
+
+</div>
+
+
+<div class="form-group">
+
+<label>Loan Amount (N$)</label>
+
+<input
+type="number"
+id="loanAmount"
+placeholder="Enter loan amount"
+min="0"
+step="0.01"
+oninput="calculateTotal()"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label>Issue Date</label>
+
+<input
+type="date"
+id="issueDate"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label>Due Date</label>
+
+<input
+type="date"
+id="dueDate"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label>Interest (N$)</label>
+
+<input
+type="number"
+id="loanInterest"
+placeholder="Enter interest amount"
+min="0"
+step="0.01"
+value="0"
+oninput="calculateTotal()"
+>
+
+</div>
+
+
+<div class="total-preview">
+
+Total Due:
+
+<br>
+
+<strong id="totalDuePreview">
+N$ 0.00
+</strong>
+
+</div>
+
+
+<div class="form-group" style="margin-top:15px;">
+
+<label>Loan Notes (Optional)</label>
+
+<textarea
+id="loanNotes"
+placeholder="Additional information about this loan">
+</textarea>
+
+</div>
+
+
+<div class="form-buttons">
+
+<button
+class="save-btn"
+onclick="saveLoan()">
+
+Save Loan
+
+</button>
+
+
+<button
+class="cancel-btn"
+onclick="hideLoanForm()">
+
+Cancel
+
+</button>
+
+</div>
+
+</div>
+
+
+<!-- PAYMENT FORM -->
+
+<div class="form-container" id="paymentForm">
+
+<h2>Record Payment</h2>
+
+
+<div class="form-group">
+
+<label>Customer</label>
+
+<select
+id="paymentCustomer"
+onchange="loadPaymentLoans()">
+
+<option value="">
+Select Customer
+</option>
+
+</select>
+
+</div>
+
+
+<div class="form-group">
+
+<label>Loan</label>
+
+<select
+id="paymentLoan"
+onchange="showPaymentBalance()">
+
+<option value="">
+Select Loan
+</option>
+
+</select>
+
+</div>
+
+
+<div class="balance-preview">
+
+Current Balance:
+
+<br>
+
+<strong id="paymentBalance">
+N$ 0.00
+</strong>
+
+</div>
+
+
+<div class="form-group" style="margin-top:15px;">
+
+<label>Payment Amount (N$)</label>
+
+<input
+type="number"
+id="paymentAmount"
+placeholder="Enter payment amount"
+min="0"
+step="0.01"
+oninput="checkPaymentAmount()"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label>Payment Date</label>
+
+<input
+type="date"
+id="paymentDate"
+>
+
+</div>
+
+
+<div class="form-group">
+
+<label>Payment Method</label>
+
+<select id="paymentMethod">
+
+<option value="">
+Select Payment Method
+</option>
+
+<option value="Cash">
+Cash
+</option>
+
+<option value="Bank Transfer">
+Bank Transfer
+</option>
+
+<option value="EFT">
+EFT
+</option>
+
+<option value="Other">
+Other
+</option>
+
+</select>
+
+</div>
+
+
+<div class="form-group">
+
+<label>Reference / Notes</label>
+
+<textarea
+id="paymentNotes"
+placeholder="Payment reference or notes">
+</textarea>
+
+</div>
+
+
+<div class="form-buttons">
+
+<button
+class="save-btn"
+onclick="savePayment()">
+
+Save Payment
+
+</button>
+
+
+<button
+class="cancel-btn"
+onclick="hidePaymentForm()">
+
+Cancel
+
+</button>
+
+</div>
+
+</div>
+
+
+<!-- REMINDERS -->
+
+<div
+class="table-container reminder-section"
+id="reminderSection">
+
+<h2 class="section-title">
+🔔 PAYMENT REMINDERS
+</h2>
+
+
+<div class="reminder-header">
+
+<strong id="reminderSummary">
+Checking reminders...
+</strong>
+
+</div>
+
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Customer</th>
+
+<th>Contact</th>
+
+<th>Balance</th>
+
+<th>Due Date</th>
+
+<th>Status</th>
+
+<th>Action</th>
+
+</tr>
+
+</thead>
+
+<tbody id="reminderTableBody">
+</tbody>
+
+</table>
+
+</div>
+
+
+<!-- CUSTOMERS -->
+
+<div
+class="table-container customer-section"
+id="customerSection">
+
+<h2 class="section-title">
+CUSTOMERS
+</h2>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Name</th>
+
+<th>Contact</th>
+
+<th>Company</th>
+
+<th>Address</th>
+
+<th>Action</th>
+
+</tr>
+
+</thead>
+
+<tbody id="customerTableBody">
+</tbody>
+
+</table>
+
+</div>
+
+
+<!-- LOANS -->
+
+<div
+class="table-container loan-section"
+id="loanSection">
+
+<h2 class="section-title">
+LOANS
+</h2>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Customer</th>
+
+<th>Amount</th>
+
+<th>Interest</th>
+
+<th>Total Due</th>
+
+<th>Balance</th>
+
+<th>Due Date</th>
+
+<th>Status</th>
+
+<th>Action</th>
+
+</tr>
+
+</thead>
+
+<tbody id="loanTableBody">
+</tbody>
+
+</table>
+
+</div>
+
+
+<!-- PAYMENTS -->
+
+<div
+class="table-container payment-section"
+id="paymentSection">
+
+<h2 class="section-title">
+RECENT PAYMENTS
+</h2>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Customer</th>
+
+<th>Amount</th>
+
+<th>Date</th>
+
+<th>Method</th>
+
+<th>Reference</th>
+
+</tr>
+
+</thead>
+
+<tbody id="paymentTableBody">
+</tbody>
+
+</table>
+
+</div>
+
+
+<footer>
+
+© 2026 MiccoInvoices Loan Tracker
+
+</footer>
+
+</div>
+
+
+<script>
+
+const SUPABASE_URL = "https://iagwijsdrttyxdtlfmem.supabase.co";
+const SUPABASE_KEY = "sb_publishable_Hm2xhD-nQW3jhzsvqPwJzQ_U2oG5kbZ";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function loginSeller() {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const message = document.getElementById("loginMessage");
+  message.textContent = "";
+  if (!email || !password) { message.textContent = "Please enter your email and password."; return; }
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if (error) { message.textContent = error.message; return; }
+  await checkLogin();
+}
+
+async function logoutSeller() {
+  const { error } = await supabaseClient.auth.signOut();
+  if (error) { alert("Logout failed: " + error.message); return; }
+  document.getElementById("appContainer").style.display = "none";
+  document.getElementById("loginScreen").style.display = "block";
+}
+
+async function setupSellerProfile() {
+  const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+  if (userError || !user) return;
+  const { data: seller, error } = await supabaseClient.from("sellers").select("*").eq("id", user.id).maybeSingle();
+  if (error) { console.error("Seller profile lookup failed:", error.message); return; }
+  if (!seller) {
+    const { error: insertError } = await supabaseClient.from("sellers").insert({ id: user.id, company_name: "Your Company", contact_info: "Contact Information" });
+    if (insertError) console.error("Seller profile creation failed:", insertError.message);
+  }
+}
+
+async function checkLogin() {
+  const { data, error } = await supabaseClient.auth.getSession();
+  if (error) { document.getElementById("loginMessage").textContent = error.message; return; }
+  if (data.session) {
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("appContainer").style.display = "block";
+    await setupSellerProfile();
+  } else {
+    document.getElementById("loginScreen").style.display = "block";
+    document.getElementById("appContainer").style.display = "none";
+  }
+}
+
+
+
+/* =========================
+CUSTOMERS
+========================= */
+
+function showCustomerForm() {
+
+    hideAllForms();
+
+    document.getElementById("customerForm").style.display =
+        "block";
+
+    scrollToForm("customerForm");
+
+}
+
+
+function hideCustomerForm() {
+
+    document.getElementById("customerForm").style.display =
+        "none";
+
+}
+
+
+function saveCustomer() {
+
+    const name =
+        document.getElementById("customerName").value.trim();
+
+    const contact =
+        document.getElementById("customerContact").value.trim();
+
+    const address =
+        document.getElementById("customerAddress").value.trim();
+
+    const company =
+        document.getElementById("customerCompany").value.trim();
+
+    const companyContact =
+        document.getElementById("companyContact").value.trim();
+
+
+    if (!name) {
+
+        alert("Please enter the customer's full name.");
+
+        return;
+
+    }
+
+
+    const customer = {
+
+        id: Date.now(),
+
+        name,
+
+        contact,
+
+        address,
+
+        company,
+
+        companyContact
+
+    };
+
+
+    let customers =
+        JSON.parse(localStorage.getItem("miccoCustomers")) || [];
+
+
+    customers.push(customer);
+
+
+    localStorage.setItem(
+        "miccoCustomers",
+        JSON.stringify(customers)
+    );
+
+
+    document.getElementById("customerName").value = "";
+
+    document.getElementById("customerContact").value = "";
+
+    document.getElementById("customerAddress").value = "";
+
+    document.getElementById("customerCompany").value = "";
+
+    document.getElementById("companyContact").value = "";
+
+
+    hideCustomerForm();
+
+    displayCustomers();
+
+    loadCustomerOptions();
+
+    loadPaymentCustomers();
+
+    updateDashboard();
+
+
+    alert("Customer saved successfully!");
+
+}
+
+
+function displayCustomers() {
+
+    const customers =
+        JSON.parse(localStorage.getItem("miccoCustomers")) || [];
+
+
+    const tableBody =
+        document.getElementById("customerTableBody");
+
+
+    const section =
+        document.getElementById("customerSection");
+
+
+    tableBody.innerHTML = "";
+
+
+    if (customers.length === 0) {
+
+        section.style.display = "none";
+
+        return;
+
+    }
+
+
+    section.style.display = "block";
+
+
+    customers.forEach(customer => {
+
+        const row =
+            document.createElement("tr");
+
+
+        row.innerHTML = `
+
+            <td>${escapeHTML(customer.name)}</td>
+
+            <td>${escapeHTML(customer.contact)}</td>
+
+            <td>${escapeHTML(customer.company || "-")}</td>
+
+            <td>${escapeHTML(customer.address || "-")}</td>
+
+            <td>
+
+                <button
+                class="delete-btn"
+                onclick="deleteCustomer(${customer.id})">
+
+                Delete
+
+                </button>
+
+            </td>
+
+        `;
+
+
+        tableBody.appendChild(row);
+
+    });
+
+}
+
+
+function deleteCustomer(id) {
+
+    const loans =
+        JSON.parse(localStorage.getItem("miccoLoans")) || [];
+
+
+    if (
+        loans.some(loan => loan.customerId === id)
+    ) {
+
+        alert(
+            "This customer has a loan and cannot be deleted until the loan is removed."
+        );
+
+        return;
+
+    }
+
+
+    if (!confirm("Delete this customer?")) {
+
+        return;
+
+    }
+
+
+    let customers =
+        JSON.parse(localStorage.getItem("miccoCustomers")) || [];
+
+
+    customers =
+        customers.filter(
+            customer => customer.id !== id
+        );
+
+
+    localStorage.setItem(
+        "miccoCustomers",
+        JSON.stringify(customers)
+    );
+
+
+    displayCustomers();
+
+    loadCustomerOptions();
+
+    loadPaymentCustomers();
+
+    updateDashboard();
+
+}
+
+
+/* =========================
+LOANS
+========================= */
+
+function showLoanForm() {
+
+    const customers =
+        JSON.parse(localStorage.getItem("miccoCustomers")) || [];
+
+
+    if (customers.length === 0) {
+
+        alert(
+            "Please add a customer before creating a loan."
+        );
+
+        return;
+
+    }
+
+
+    hideAllForms();
+
+    loadCustomerOptions();
+
+    document.getElementById("loanForm").style.display =
+        "block";
+
+    scrollToForm("loanForm");
+
+}
+
+
+function hideLoanForm() {
+
+    document.getElementById("loanForm").style.display =
+        "none";
+
+}
+
+
+function loadCustomerOptions() {
+
+    const customers =
+        JSON.parse(localStorage.getItem("miccoCustomers")) || [];
+
+
+    const select =
+        document.getElementById("loanCustomer");
+
+
+    select.innerHTML =
+        '<option value="">Select Customer</option>';
+
+
+    customers.forEach(customer => {
+
+        const option =
+            document.createElement("option");
+
+
+        option.value = customer.id;
+
+        option.textContent = customer.name;
+
+
+        select.appendChild(option);
+
+    });
+
+}
+
+
+function calculateTotal() {
+
+    const amount =
+        Number(
+            document.getElementById("loanAmount").value
+        ) || 0;
+
+
+    const interest =
+        Number(
+            document.getElementById("loanInterest").value
+        ) || 0;
+
+
+    document.getElementById("totalDuePreview")
+        .textContent =
+        "N$ " +
+        formatMoney(amount + interest);
+
+}
+
+
+function saveLoan() {
+
+    const customerId =
+        document.getElementById("loanCustomer").value;
+
+
+    const amount =
+        Number(
+            document.getElementById("loanAmount").value
+        ) || 0;
+
+
+    const issueDate =
+        document.getElementById("issueDate").value;
+
+
+    const dueDate =
+        document.getElementById("dueDate").value;
+
+
+    const interest =
+        Number(
+            document.getElementById("loanInterest").value
+        ) || 0;
+
+
+    const notes =
+        document.getElementById("loanNotes").value.trim();
+
+
+    if (!customerId) {
+
+        alert("Please select a customer.");
+
+        return;
+
+    }
+
+
+    if (amount <= 0) {
+
+        alert("Please enter a valid loan amount.");
+
+        return;
+
+    }
+
+
+    if (!issueDate || !dueDate) {
+
+        alert("Please enter both dates.");
+
+        return;
+
+    }
+
+
+    if (new Date(dueDate) < new Date(issueDate)) {
+
+        alert(
+            "Due date cannot be before issue date."
+        );
+
+        return;
+
+    }
+
+
+    const loan = {
+
+        id: Date.now(),
+
+        customerId: Number(customerId),
+
+        amount,
+
+        interest,
+
+        totalDue: amount + interest,
+
+        issueDate,
+
+        dueDate,
+
+        notes,
+
+        payments: []
+
+    };
+
+
+    let loans =
+        JSON.parse(localStorage.getItem("miccoLoans")) || [];
+
+
+    loans.push(loan);
+
+
+    localStorage.setItem(
+        "miccoLoans",
+        JSON.stringify(loans)
+    );
+
+
+    document.getElementById("loanCustomer").value = "";
+
+    document.getElementById("loanAmount").value = "";
+
+    document.getElementById("issueDate").value = "";
+
+    document.getElementById("dueDate").value = "";
+
+    document.getElementById("loanInterest").value = "0";
+
+    document.getElementById("loanNotes").value = "";
+
+
+    calculateTotal();
+
+    hideLoanForm();
+
+    displayLoans();
+
+    updateDashboard();
+
+    loadPaymentCustomers();
+
+
+    alert("Loan saved successfully!");
+
+}
+
+
+function displayLoans() {
+
+    const loans =
+        JSON.parse(localStorage.getItem("miccoLoans")) || [];
+
+
+    const customers =
+        JSON.parse(localStorage.getItem("miccoCustomers")) || [];
+
+
+    const tableBody =
+        document.getElementById("loanTableBody");
+
+
+    const section =
+        document.getElementById("loanSection");
+
+
+    tableBody.innerHTML = "";
+
+
+    if (loans.length === 0) {
+
+        section.style.display = "none";
+
+        return;
+
+    }
+
+
+    section.style.display = "block";
+
+
+    loans.forEach(loan => {
+
+        const customer =
+            customers.find(
+                c => c.id === loan.customerId
+            );
+
+
+        const customerName =
+            customer
+                ? customer.name
+                : "Unknown";
+
+
+        const payments =
+            getLoanPayments(loan);
+
+
+        const balance =
+            getLoanBalance(loan);
+
+
+        const status =
+            getLoanStatus(loan);
+
+
+        const row =
+            document.createElement("tr");
+
+
+        row.innerHTML = `
+
+            <td>${escapeHTML(customerName)}</td>
+
+            <td>N$ ${formatMoney(loan.amount)}</td>
+
+            <td>N$ ${formatMoney(loan.interest)}</td>
+
+            <td>N$ ${formatMoney(loan.totalDue)}</td>
+
+            <td>N$ ${formatMoney(balance)}</td>
+
+            <td>${formatDate(loan.dueDate)}</td>
+
+            <td>
+
+                <span class="status ${status.className}">
+                    ${status.label}
+                </span>
+
+            </td>
+
+            <td>
+
+                <button
+                class="delete-btn"
+                onclick="deleteLoan(${loan.id})">
+
+                Delete
+
+                </button>
+
+            </td>
+
+        `;
+
+
+        tableBody.appendChild(row);
+
+    });
+
+}
+
+
+function getLoanPayments(loan) {
+
+    if (!loan.payments) {
+
+        return 0;
+
+    }
+
+
+    return loan.payments.reduce(
+
+        (total, payment) =>
+            total + Number(payment.amount),
+
+        0
+
+    );
+
+}
+
+
+function getLoanBalance(loan) {
+
+    return Math.max(
+
+        Number(loan.totalDue) -
+        getLoanPayments(loan),
+
+        0
+
+    );
+
+}
+
+
+function getLoanStatus(loan) {
+
+    const balance =
+        getLoanBalance(loan);
+
+
+    if (balance <= 0) {
+
+        return {
+            label: "Paid",
+            className: "paid"
+        };
+
+    }
+
+
+    const today =
+        new Date();
+
+
+    today.setHours(0,0,0,0);
+
+
+    const dueDate =
+        new Date(loan.dueDate);
+
+
+    dueDate.setHours(0,0,0,0);
+
+
+    if (dueDate < today) {
+
+        return {
+            label: "Overdue",
+            className: "overdue"
+        };
+
+    }
+
+
+    const days =
+        Math.ceil(
+            (dueDate - today) /
+            (1000 * 60 * 60 * 24)
+        );
+
+
+    if (days <= 7) {
+
+        return {
+            label: "Due Soon",
+            className: "due"
+        };
+
+    }
+
+
+    return {
+        label: "Active",
+        className: "active"
+    };
+
+}
+
+
+function deleteLoan(id) {
+
+    if (!confirm("Delete this loan?")) {
+
+        return;
+
+    }
+
+
+    let loans =
+        JSON.parse(localStorage.getItem("miccoLoans")) || [];
+
+
+    loans =
+        loans.filter(
+            loan => loan.id !== id
+        );
+
+
+    localStorage.setItem(
+        "miccoLoans",
+        JSON.stringify(loans)
+    );
+
+
+    displayLoans();
+
+    displayPayments();
+
+    displayReminders();
+
+    updateDashboard();
+
+    loadPaymentCustomers();
+
+}
+
+
+/* =========================
+PAYMENTS
+========================= */
+
+function showPaymentForm() {
+
+    const loans =
+        JSON.parse(localStorage.getItem("miccoLoans")) || [];
+
+
+    if (loans.length === 0) {
+
+        alert(
+            "Please add a loan before recording a payment."
+        );
+
+        return;
+
+    }
+
+
+    hideAllForms();
+
+    loadPaymentCustomers();
+
+
+    document.getElementById("paymentForm").style.display =
+        "block";
+
+
+    document.getElementById("paymentDate").value =
+        getToday();
+
+
+    scrollToForm("paymentForm");
+
+}
+
+
+function hidePaymentForm() {
+
+    document.getElementById("paymentForm").style.display =
+        "none";
+
+}
+
+
+function loadPaymentCustomers() {
+
+    const customers =
+        JSON.parse(localStorage.getItem("miccoCustomers")) || [];
+
+
+    const loans =
+        JSON.parse(localStorage.getItem("miccoLoans")) || [];
+
+
+    const select =
+        document.getElementById("paymentCustomer");
+
+
+    select.innerHTML =
+        '<option value="">Select Customer</option>';
+
+
+    const customerIds =
+        [...new Set(
+
+            loans
+            .filter(
+                loan => getLoanBalance(loan) > 0
+            )
+            .map(
+                loan => loan.customerId
+            )
+
+        )];
+
+
+    customers.forEach(customer => {
+
+        if (customerIds.includes(customer.id)) {
+
+            const option =
+                document.createElement("option");
+
+
+            option.value =
+                customer.id;
+
+
+            option.textContent =
+                customer.name;
+
+
+            select.appendChild(option);
+
+        }
+
+    });
+
+
+    document.getElementById("paymentLoan").innerHTML =
+        '<option value="">Select Loan</option>';
+
+
+    document.getElementById("paymentBalance")
+        .textContent =
+        "N$ 0.00";
+
+}
+
+
+function loadPaymentLoans() {
+
+    const customerId =
+        Number(
+            document.getElementById("paymentCustomer").value
+        );
+
+
+    const loans =
+        JSON.parse(localStorage.getItem("miccoLoans")) || [];
+
+
+    const select =
+        document.getElementById("paymentLoan");
+
+
+    select.innerHTML =
+        '<option value="">Select Loan</option>';
+
+
+    loans.forEach(loan => {
+
+        if (
+            loan.customerId === customerId &&
+            getLoanBalance(loan) > 0
+        ) {
+
+            const option =
+                document.createElement("option");
+
+
+            option.value =
+                loan.id;
+
+
+            option.textContent =
+                "N$ " +
+                formatMoney(loan.totalDue) +
+                " | Due " +
+                formatDate(loan.dueDate);
+
+
+            select.appendChild(option);
+
+        }
+
+    });
+
+
+    showPaymentBalance();
+
+}
+
+
+function showPaymentBalance() {
+
+    const loanId =
+        Number(
+            document.getElementById("paymentLoan").value
+        );
+
+
+    const loans =
+        JSON.parse(localStorage.getItem("miccoLoans")) || [];
+
+
+    const loan =
+        loans.find(
+            item => item.id === loanId
+        );
+
+
+    if (!loan) {
+
+        document.getElementById("paymentBalance")
+            .textContent =
+            "N$ 0.00";
+
+        return;
+
+    }
+
+
+    document.getElementById("paymentBalance")
+        .textContent =
+        "N$ " +
+        formatMoney(
+            getLoanBalance(loan)
+        );
+
+}
+
+
+function checkPaymentAmount() {
+
+    const loanId =
+        Number(
+            document.getElementById("paymentLoan").value
+        );
+
+
+    const amount =
+        Number(
+            document.getElementById("paymentAmount").value
+        ) || 0;
+
+
+    const loans =
+        JSON.parse(localStorage.getItem("miccoLoans")) || [];
+
+
+    const loan =
+        loans.find(
+            item => item.id === loanId
+        );
+
+
+    if (!loan) {
+
+        return;
+
+    }
+
+
+    const balance =
+        getLoanBalance(loan);
+
+
+    if (amount > balance) {
+
+        document.getElementById("paymentAmount").value =
+            balance;
+
+        alert(
+            "Payment cannot be greater than the remaining balance."
+        );
+
+    }
+
+}
+
+
+function savePayment() {
+
+    const customerId =
+        Number(
+            document.getElementById("paymentCustomer").value
+        );
+
+
+    const loanId =
+        Number(
+            document.getElementById("paymentLoan").value
+        );
+
+
+    const amount =
+        Number(
+            document.getElementById("paymentAmount").value
+        ) || 0;
+
+
+    const date =
+        document.getElementById("paymentDate").value;
+
+
+    const method =
+        document.getElementById("paymentMethod").value;
+
+
+    const notes =
+        document.getElementById("paymentNotes").value.trim();
+
+
+    if (!customerId) {
+
+        alert("Please select a customer.");
+
+        return;
+
+    }
+
+
+    if (!loanId) {
+
+        alert("Please select a loan.");
+
+        return;
+
+    }
+
+
+    if (amount <= 0) {
+
+        alert("Please enter a valid payment amount.");
+
+        return;
+
+    }
+
+
+    if (!date) {
+
+        alert("Please select the payment date.");
+
+        return;
+
+    }
+
+
+    if (!method) {
+
+        alert("Please select a payment method.");
+
+        return;
+
+    }
+
+
+    let loans =
+        JSON.parse(localStorage.getItem("miccoLoans")) || [];
+
+
+    const loan =
+        loans.find(
+            item => item.id === loanId
+        );
+
+
+    if (!loan) {
+
+        alert("Loan could not be found.");
+
+        return;
+
+    }
+
+
+    const balance =
+        getLoanBalance(loan);
+
+
+    if (amount > balance) {
+
+        alert(
+            "Payment cannot be greater than the remaining balance."
+        );
+
+        return;
+
+    }
+
+
+    if (!loan.payments) {
+
+        loan.payments = [];
+
+    }
+
+
+    loan.payments.push({
+
+        id: Date.now(),
+
+        amount,
+
+        date,
+
+        method,
+
+        notes
+
+    });
+
+
+    localStorage.setItem(
+        "miccoLoans",
+        JSON.stringify(loans)
+    );
+
+
+    document.getElementById("paymentCustomer").value = "";
+
+    document.getElementById("paymentLoan").innerHTML =
+        '<option value="">Select Loan</option>';
+
+    document.getElementById("paymentAmount").value = "";
+
+    document.getElementById("paymentDate").value =
+        getToday();
+
+    document.getElementById("paymentMethod").value = "";
+
+    document.getElementById("paymentNotes").value = "";
+
+
+    hidePaymentForm();
+
+    displayLoans();
+
+    displayPayments();
+
+    displayReminders();
+
+    updateDashboard();
+
+    loadPaymentCustomers();
+
+
+    alert("Payment recorded successfully!");
+
+}
+
+
+function displayPayments() {
+
+    const loans =
+        JSON.parse(localStorage.getItem("miccoLoans")) || [];
+
+
+    const customers =
+        JSON.parse(localStorage.getItem("miccoCustomers")) || [];
+
+
+    const tableBody =
+        document.getElementById("paymentTableBody");
+
+
+    const section =
+        document.getElementById("paymentSection");
+
+
+    tableBody.innerHTML = "";
+
+
+    const payments = [];
+
+
+    loans.forEach(loan => {
+
+        if (!loan.payments) {
+
+            return;
+
+        }
+
+
+        const customer =
+            customers.find(
+                c => c.id === loan.customerId
+            );
+
+
+        loan.payments.forEach(payment => {
+
+            payments.push({
+
+                customer:
+                    customer
+                        ? customer.name
+                        : "Unknown",
+
+                amount:
+                    payment.amount,
+
+                date:
+                    payment.date,
+
+                method:
+                    payment.method,
+
+                notes:
+                    payment.notes
+
+            });
+
+        });
+
+    });
+
+
+    payments.sort(
+        (a,b) =>
+            new Date(b.date) -
+            new Date(a.date)
+    );
+
+
+    if (payments.length === 0) {
+
+        section.style.display = "none";
+
+        return;
+
+    }
+
+
+    section.style.display = "block";
+
+
+    payments.forEach(payment => {
+
+        const row =
+            document.createElement("tr");
+
+
+        row.innerHTML = `
+
+            <td>${escapeHTML(payment.customer)}</td>
+
+            <td>N$ ${formatMoney(payment.amount)}</td>
+
+            <td>${formatDate(payment.date)}</td>
+
+            <td>${escapeHTML(payment.method)}</td>
+
+            <td>${escapeHTML(payment.notes || "-")}</td>
+
+        `;
+
+
+        tableBody.appendChild(row);
+
+    });
+
+}
+
+
+/* =========================
+REMINDERS
+========================= */
+
+function showReminders() {
+
+    hideAllForms();
+
+    const section =
+        document.getElementById("reminderSection");
+
+
+    section.style.display =
+        "block";
+
+
+    displayReminders();
+
+
+    section.scrollIntoView({
+        behavior: "smooth"
+    });
+
+}
+
+
+function displayReminders() {
+
+    const loans =
+        JSON.parse(localStorage.getItem("miccoLoans")) || [];
+
+
+    const customers =
+        JSON.parse(localStorage.getItem("miccoCustomers")) || [];
+
+
+    const tableBody =
+        document.getElementById("reminderTableBody");
+
+
+    const summary =
+        document.getElementById("reminderSummary");
+
+
+    tableBody.innerHTML = "";
+
+
+    const reminders = [];
+
+
+    loans.forEach(loan => {
+
+        const balance =
+            getLoanBalance(loan);
+
+
+        if (balance <= 0) {
+
+            return;
+
+        }
+
+
+        const status =
+            getLoanStatus(loan);
+
+
+        if (
+            status.label !== "Overdue" &&
+            status.label !== "Due Soon"
+        ) {
+
+            return;
+
+        }
+
+
+        const customer =
+            customers.find(
+                c => c.id === loan.customerId
+            );
+
+
+        if (!customer) {
+
+            return;
+
+        }
+
+
+        reminders.push({
+
+            loan,
+
+            customer,
+
+            balance,
+
+            status
+
+        });
+
+    });
+
+
+    if (reminders.length === 0) {
+
+        summary.textContent =
+            "No payment reminders at the moment.";
+
+        return;
+
+    }
+
+
+    const overdueCount =
+        reminders.filter(
+            item => item.status.label === "Overdue"
+        ).length;
+
+
+    const dueSoonCount =
+        reminders.filter(
+            item => item.status.label === "Due Soon"
+        ).length;
+
+
+    summary.textContent =
+        overdueCount +
+        " overdue • " +
+        dueSoonCount +
+        " due soon";
+
+
+    reminders.sort((a,b) => {
+
+        return (
+            new Date(a.loan.dueDate) -
+            new Date(b.loan.dueDate)
+        );
+
+    });
+
+
+    reminders.forEach(item => {
+
+        const row =
+            document.createElement("tr");
+
+
+        row.innerHTML = `
+
+            <td>
+                ${escapeHTML(item.customer.name)}
+            </td>
+
+            <td>
+                ${escapeHTML(item.customer.contact || "-")}
+            </td>
+
+            <td>
+                N$ ${formatMoney(item.balance)}
+            </td>
+
+            <td>
+                ${formatDate(item.loan.dueDate)}
+            </td>
+
+            <td>
+
+                <span class="status ${item.status.className}">
+                    ${item.status.label}
+                </span>
+
+            </td>
+
+            <td>
+
+                <button
+                class="whatsapp-btn"
+                onclick="sendWhatsAppReminder(
+                    ${item.customer.id},
+                    ${item.loan.id}
+                )">
+
+                WhatsApp
+
+                </button>
+
+            </td>
+
+        `;
+
+
+        tableBody.appendChild(row);
+
+    });
+
+}
+
+
+function sendWhatsAppReminder(customerId, loanId) {
+
+    const customers =
+        JSON.parse(localStorage.getItem("miccoCustomers")) || [];
+
+
+    const loans =
+        JSON.parse(localStorage.getItem("miccoLoans")) || [];
+
+
+    const customer =
+        customers.find(
+            c => c.id === customerId
+        );
+
+
+    const loan =
+        loans.find(
+            l => l.id === loanId
+        );
+
+
+    if (!customer || !loan) {
+
+        alert("Customer or loan not found.");
+
+        return;
+
+    }
+
+
+    if (!customer.contact) {
+
+        alert(
+            "This customer does not have a contact number saved."
+        );
+
+        return;
+
+    }
+
+
+    const balance =
+        getLoanBalance(loan);
+
+
+    const status =
+        getLoanStatus(loan);
+
+
+    const message =
+
+        "Hello " +
+        customer.name +
+        ", this is a friendly payment reminder from MiccoInvoices. " +
+
+        "Your outstanding balance is N$ " +
+        formatMoney(balance) +
+        " and the loan due date is " +
+        formatDate(loan.dueDate) +
+        ". " +
+
+        "Your account is currently marked as " +
+        status.label +
+        ". " +
+
+        "Please contact us if you have already made the payment. Thank you.";
+
+
+    let phone =
+        customer.contact.replace(/\D/g, "");
+
+
+    if (
+        phone.startsWith("0") &&
+        phone.length === 10
+    ) {
+
+        phone =
+            "264" +
+            phone.substring(1);
+
+    }
+
+
+    const url =
+        "https://wa.me/" +
+        phone +
+        "?text=" +
+        encodeURIComponent(message);
+
+
+    window.open(
+        url,
+        "_blank"
+    );
+
+}
+
+
+/* =========================
+DASHBOARD
+========================= */
+
+function updateDashboard() {
+
+    const customers =
+        JSON.parse(localStorage.getItem("miccoCustomers")) || [];
+
+
+    const loans =
+        JSON.parse(localStorage.getItem("miccoLoans")) || [];
+
+
+    let totalLent = 0;
+
+    let totalCollected = 0;
+
+    let outstanding = 0;
+
+    let overdueAmount = 0;
+
+    let active = 0;
+
+    let dueSoon = 0;
+
+    let overdue = 0;
+
+
+    loans.forEach(loan => {
+
+        const payments =
+            getLoanPayments(loan);
+
+
+        const balance =
+            getLoanBalance(loan);
+
+
+        totalLent +=
+            Number(loan.amount);
+
+
+        totalCollected +=
+            payments;
+
+
+        outstanding +=
+            balance;
+
+
+        const status =
+            getLoanStatus(loan);
+
+
+        if (status.label === "Overdue") {
+
+            overdue++;
+
+            overdueAmount += balance;
+
+        }
+        else if (status.label === "Due Soon") {
+
+            dueSoon++;
+
+            active++;
+
+        }
+        else if (status.label === "Active") {
+
+            active++;
+
+        }
+
+    });
+
+
+    document.getElementById("totalLent")
+        .textContent =
+        "N$ " +
+        formatMoney(totalLent);
+
+
+    document.getElementById("totalCollected")
+        .textContent =
+        "N$ " +
+        formatMoney(totalCollected);
+
+
+    document.getElementById("outstanding")
+        .textContent =
+        "N$ " +
+        formatMoney(outstanding);
+
+
+    document.getElementById("overdueAmount")
+        .textContent =
+        "N$ " +
+        formatMoney(overdueAmount);
+
+
+    document.getElementById("customerCount")
+        .textContent =
+        customers.length;
+
+
+    document.getElementById("activeLoans")
+        .textContent =
+        active;
+
+
+    document.getElementById("dueSoon")
+        .textContent =
+        dueSoon;
+
+
+    document.getElementById("overdueLoans")
+        .textContent =
+        overdue;
+
+}
+
+
+/* =========================
+UTILITIES
+========================= */
+
+function hideAllForms() {
+
+    document.getElementById("customerForm").style.display =
+        "none";
+
+    document.getElementById("loanForm").style.display =
+        "none";
+
+    document.getElementById("paymentForm").style.display =
+        "none";
+
+}
+
+
+function scrollToForm(id) {
+
+    setTimeout(() => {
+
+        window.scrollTo({
+
+            top:
+                document.getElementById(id).offsetTop - 20,
+
+            behavior: "smooth"
+
+        });
+
+    }, 100);
+
+}
+
+
+function getToday() {
+
+    const today =
+        new Date();
+
+
+    const year =
+        today.getFullYear();
+
+
+    const month =
+        String(
+            today.getMonth() + 1
+        ).padStart(2, "0");
+
+
+    const day =
+        String(
+            today.getDate()
+        ).padStart(2, "0");
+
+
+    return (
+        year +
+        "-" +
+        month +
+        "-" +
+        day
+    );
+
+}
+
+
+function formatMoney(amount) {
+
+    return Number(amount).toLocaleString(
+        "en-NA",
+        {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }
+    );
+
+}
+
+
+function formatDate(dateString) {
+
+    if (!dateString) {
+
+        return "-";
+
+    }
+
+
+    const parts =
+        dateString.split("-");
+
+
+    return (
+        parts[2] +
+        "/" +
+        parts[1] +
+        "/" +
+        parts[0]
+    );
+
+}
+
+
+function escapeHTML(text) {
+
+    const div =
+        document.createElement("div");
+
+
+    div.textContent =
+        text;
+
+
+    return div.innerHTML;
+
+}
+
+
+/* =========================
+START APP
+========================= */
+
+displayCustomers();
+
+loadCustomerOptions();
+
+loadPaymentCustomers();
+
+displayLoans();
+
+displayPayments();
+
+displayReminders();
+
+updateDashboard();
+
+calculateTotal();
+checkLogin();
+
+
+</script>
+</body>
+</html>
